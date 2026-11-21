@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="حاسبة المسابقات" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon-180.png" />
+  <title>حاسبة نقاط المسابقات</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800;900&display=swap');
+
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-light: #334155;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Tajawal', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 95px;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 14px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .app-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .app-title h1 {
+      font-size: 1.2rem;
+      font-weight: 900;
+      background: linear-gradient(to left, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn-icon {
+      background: var(--surface-light);
+      color: var(--text);
+      border: none;
+      border-radius: 12px;
+      padding: 8px 11px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: transform 0.1s, background 0.2s;
+    }
+
+    .btn-icon:active {
+      transform: scale(0.95);
+    }
+
+    .btn-add {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-history {
+      background: #0d9488;
+      color: #fff;
+    }
+
+    /* Tools Bar (Timer & Randomizer) */
+    .tools-bar {
+      max-width: 800px;
+      margin: 14px auto 0;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+
+    .timer-box {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      gap: 8px;
+    }
+
+    .timer-display {
+      font-size: 1.4rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      color: #38bdf8;
+      min-width: 60px;
+      cursor: pointer;
+    }
+
+    .timer-display.warning {
+      color: var(--danger);
+      animation: pulse 0.6s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+
+    .timer-controls {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .t-btn {
+      background: var(--surface-light);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 6px 9px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .t-btn.play { background: var(--success); }
+    .t-btn.pause { background: var(--warning); color: #000; }
+
+    .random-btn {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 0 16px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .random-btn:active { transform: scale(0.96); }
+
+    /* Contestants List */
+    .container {
+      max-width: 800px;
+      margin: 16px auto;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 50px 20px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 2px dashed var(--surface-light);
+    }
+
+    .empty-state p {
+      color: var(--text-muted);
+      margin: 10px 0 20px;
+      font-size: 1.05rem;
+    }
+
+    /* Player Card */
+    .player-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      border: 2px solid rgba(255, 255, 255, 0.06);
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      position: relative;
+    }
+
+    .player-card.rank-1 {
+      border-color: #fbbf24;
+      background: linear-gradient(145deg, rgba(251, 191, 36, 0.12), var(--surface));
+    }
+
+    .player-card.highlighted {
+      border-color: #a855f7;
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+      transform: scale(1.02);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .player-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      width: 58px;
+      height: 58px;
+      flex-shrink: 0;
+    }
+
+    .avatar {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #fff;
+      border: 3px solid var(--border-color, #3b82f6);
+      background: #0f172a;
+    }
+
+    .rank-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #334155;
+      color: #fff;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      font-size: 0.75rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--bg);
+    }
+
+    .rank-1 .rank-badge { background: #fbbf24; color: #000; }
+    .rank-2 .rank-badge { background: #cbd5e1; color: #000; }
+    .rank-3 .rank-badge { background: #d97706; color: #fff; }
+
+    .name-area {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .player-name {
+      font-size: 1.2rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-actions-mini {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .mini-btn {
+      background: rgba(255, 255, 255, 0.07);
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .score-box {
+      background: rgba(15, 23, 42, 0.6);
+      padding: 8px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      min-width: 85px;
+      text-align: center;
+    }
+
+    .score-value {
+      font-size: 1.8rem;
+      font-weight: 900;
+      line-height: 1;
+      color: #fff;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .score-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Point Buttons Grid */
+    .points-controls {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+    }
+
+    .pt-btn {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 4px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.15s;
+      color: #fff;
+    }
+
+    .pt-btn:active { transform: scale(0.92); }
+    .pt-minus { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .pt-plus { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .pt-big { background: rgba(59, 130, 246, 0.25); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.45); }
+    .pt-custom { background: var(--surface-light); color: #e2e8f0; }
+
+    /* Bottom Bar */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 12px 12px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      z-index: 40;
+    }
+
+    .bottom-bar button {
+      flex: 1;
+      max-width: 210px;
+      padding: 12px 8px;
+      border: none;
+      border-radius: 14px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-save-round {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+    }
+
+    .btn-podium {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+    }
+
+    .btn-reset-scores {
+      background: var(--surface-light);
+      color: #fff;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 22px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      animation: popIn 0.2s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal h2 {
+      font-size: 1.3rem;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--surface-light);
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .form-input:focus { border-color: var(--primary); }
+
+    .photo-upload-area {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--bg);
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px dashed var(--surface-light);
+    }
+
+    .preview-circle {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--surface-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 3px solid var(--primary);
+    }
+
+    .preview-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .emoji-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .emoji-opt {
+      background: var(--bg);
+      border: 2px solid transparent;
+      border-radius: 10px;
+      padding: 8px;
+      font-size: 1.4rem;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .emoji-opt.selected {
+      border-color: var(--primary);
+      background: rgba(59, 130, 246, 0.2);
+    }
+
+    .color-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .color-dot {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 3px solid transparent;
+    }
+
+    .color-dot.selected { border-color: #fff; transform: scale(1.15); }
+
+    .modal-btns {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .modal-btns button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .btn-save { background: var(--primary); color: #fff; }
+    .btn-cancel { background: var(--surface-light); color: #fff; }
+
+    /* History Tabs & Cards */
+    .history-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      background: var(--bg);
+      padding: 6px;
+      border-radius: 14px;
+      margin-bottom: 14px;
+    }
+
+    .h-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 4px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .h-tab.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .history-summary-title {
+      font-size: 0.9rem;
+      color: #38bdf8;
+      font-weight: 800;
+      margin-bottom: 10px;
+      text-align: center;
+      background: rgba(56, 189, 248, 0.1);
+      padding: 8px;
+      border-radius: 10px;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .history-item {
+      background: var(--bg);
+      border-radius: 14px;
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .h-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .h-rank {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--surface-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .h-rank.top-1 { background: #fbbf24; color: #000; }
+    .h-rank.top-2 { background: #cbd5e1; color: #000; }
+    .h-rank.top-3 { background: #d97706; color: #fff; }
+
+    .h-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      border: 2px solid var(--primary);
+      flex-shrink: 0;
+    }
+
+    .h-stats {
+      text-align: left;
+      flex-shrink: 0;
+    }
+
+    .h-pts {
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: #34d399;
+    }
+
+    .h-wins {
+      font-size: 0.75rem;
+      color: #fbbf24;
+      font-weight: 700;
+    }
+
+    .log-card {
+      background: var(--bg);
+      border-radius: 14px;
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 0.85rem;
+    }
+
+    .log-scores {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .log-pill {
+      background: var(--surface);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    /* Podium Modal */
+    .podium-wrap {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 10px;
+      margin: 24px 0 16px;
+      min-height: 200px;
+    }
+
+    .podium-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      text-align: center;
+    }
+
+    .podium-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      border: 3px solid #fff;
+      margin-bottom: 6px;
+    }
+
+    .podium-name {
+      font-size: 0.9rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+      max-width: 95px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .podium-bar {
+      width: 100%;
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: #000;
+      padding: 8px 4px;
+    }
+
+    .bar-1 { height: 110px; background: linear-gradient(180deg, #fde047, #f59e0b); }
+    .bar-2 { height: 80px; background: linear-gradient(180deg, #f1f5f9, #94a3b8); }
+    .bar-3 { height: 60px; background: linear-gradient(180deg, #fdba74, #b45309); color: #fff; }
+
+    /* Floating Score Animation */
+    .float-num {
+      position: fixed;
+      font-size: 1.5rem;
+      font-weight: 900;
+      pointer-events: none;
+      z-index: 999;
+      animation: floatUp 0.8s ease-out forwards;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-45px) scale(1.3); }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="app-title">
+      <span style="font-size: 1.5rem;">🏆</span>
+      <h1>حاسبة المسابقات</h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn-icon btn-history" onclick="openHistoryModal()">
+        📅 السجل
+      </button>
+      <button class="btn-icon" onclick="toggleSort()" id="sortBtn" title="ترتيب تلقائي">
+        📊 <span id="sortState">تلقائي</span>
+      </button>
+      <button class="btn-icon btn-add" onclick="openPlayerModal()">
+        ➕ متسابق
+      </button>
+    </div>
+  </header>
+
+  <!-- Tools Bar -->
+  <div class="tools-bar">
+    <div class="timer-box">
+      <div class="timer-display" id="timerDisplay" onclick="editTimer()" title="اضغط لتغيير الوقت">00:30</div>
+      <div class="timer-controls">
+        <button class="t-btn play" id="timerStartBtn" onclick="toggleTimer()">▶️</button>
+        <button class="t-btn" onclick="resetTimer()">🔄</button>
+        <button class="t-btn" onclick="setPresetTimer(15)">15ث</button>
+        <button class="t-btn" onclick="setPresetTimer(30)">30ث</button>
+        <button class="t-btn" onclick="setPresetTimer(60)">60ث</button>
+      </div>
+    </div>
+    <button class="random-btn" onclick="pickRandomPlayer()">
+      🎲 قرعة
+    </button>
+  </div>
+
+  <!-- Contestants Container -->
+  <div class="container" id="playersContainer"></div>
+
+  <!-- Bottom Actions -->
+  <div class="bottom-bar">
+    <button class="btn-save-round" onclick="openSaveMatchModal()">💾 حفظ النتيجة</button>
+    <button class="btn-podium" onclick="showPodium()">🥇 التتويج</button>
+    <button class="btn-reset-scores" onclick="resetAllScores()">🔄 تصفير</button>
+  </div>
+
+  <!-- Add / Edit Player Modal -->
+  <div class="modal-overlay" id="playerModal">
+    <div class="modal">
+      <h2 id="modalTitle">إضافة متسابق جديد</h2>
+      <input type="hidden" id="editPlayerId" />
+
+      <div class="form-group">
+        <label>اسم المتسابق أو الفريق</label>
+        <input type="text" id="playerNameInput" class="form-input" placeholder="مثال: أحمد، فريق الصقور..." maxlength="25" />
+      </div>
+
+      <div class="form-group">
+        <label>الصورة الشخصية (من الجهاز) أو اختر رمزاً</label>
+        <div class="photo-upload-area">
+          <div class="preview-circle" id="avatarPreview">🦁</div>
+          <div style="flex:1;">
+            <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)" />
+            <button type="button" class="btn-icon" style="width:100%; justify-content:center; margin-bottom:6px;" onclick="document.getElementById('photoInput').click()">
+              📷 رفع صورة من الجهاز
+            </button>
+            <button type="button" class="mini-btn" style="width:100%;" onclick="clearUploadedPhoto()">استخدام رمز تعبيري</button>
+          </div>
+        </div>
+
+        <div class="emoji-grid" id="emojiGrid"></div>
+      </div>
+
+      <div class="form-group">
+        <label>لون الإطار</label>
+        <div class="color-row" id="colorRow"></div>
+      </div>
+
+      <div class="modal-btns">
+        <button class="btn-save" onclick="savePlayer()">حفظ</button>
+        <button class="btn-cancel" onclick="closePlayerModal()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Match to History Modal -->
+  <div class="modal-overlay" id="saveMatchModal">
+    <div class="modal">
+      <h2>💾 حفظ نتائج المسابقة في السجل</h2>
+      <div class="form-group">
+        <label>عنوان المسابقة أو الجلسة (اختياري)</label>
+        <input type="text" id="matchTitleInput" class="form-input" placeholder="مثال: مسابقة الجمعة، تحدي العائلة..." maxlength="35" />
+      </div>
+      <div class="form-group">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#fff;">
+          <input type="checkbox" id="resetAfterSaveCheck" checked style="width:18px; height:18px;" />
+          تصفير نقاط المتسابقين بعد الحفظ لبدء مسابقة جديدة
+        </label>
+      </div>
+      <div class="modal-btns">
+        <button class="btn-save" style="background:var(--success);" onclick="confirmSaveMatch()">حفظ في السجل</button>
+        <button class="btn-cancel" onclick="closeSaveMatchModal()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Modal (Weekly / Monthly / Yearly / All Logs) -->
+  <div class="modal-overlay" id="historyModal">
+    <div class="modal">
+      <h2>📅 سجل النتائج والإحصائيات</h2>
+
+      <div class="history-tabs">
+        <button class="h-tab active" onclick="switchHistoryTab('weekly', this)">أسبوعي</button>
+        <button class="h-tab" onclick="switchHistoryTab('monthly', this)">شهري</button>
+        <button class="h-tab" onclick="switchHistoryTab('yearly', this)">سنوي</button>
+        <button class="h-tab" onclick="switchHistoryTab('logs', this)">السجل الكامل</button>
+      </div>
+
+      <div class="history-summary-title" id="historyPeriodLabel"></div>
+      <div class="history-list" id="historyContent"></div>
+
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeHistoryModal()">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Points Modal -->
+  <div class="modal-overlay" id="customPointsModal">
+    <div class="modal">
+      <h2 id="customPtTitle">تعديل نقاط</h2>
+      <input type="hidden" id="customPtPlayerId" />
+      <div class="form-group">
+        <label>أدخل الرقم (مثال: 15 للإضافة أو -5 للخصم)</label>
+        <input type="number" id="customPtInput" class="form-input" placeholder="0" style="text-align:center; font-size:1.4rem; font-weight:900;" />
+      </div>
+      <div class="modal-btns">
+        <button class="btn-save" onclick="applyCustomPoints()">تطبيق</button>
+        <button class="btn-cancel" onclick="closeCustomPoints()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Podium Modal -->
+  <div class="modal-overlay" id="podiumModal">
+    <div class="modal">
+      <h2>🏆 نتائج المسابقة الحالية</h2>
+      <div class="podium-wrap" id="podiumContent"></div>
+      <div class="modal-btns">
+        <button class="btn-save" onclick="closePodium()">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+
+    const EMOJIS = ['🦁', '🚀', '👑', '⚡', '🦊', '🐼', '🐯', '🦄', '🦅', '⚽', '🌟', '🎮'];
+    const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#ec4899', '#06b6d4'];
+
+    let players = JSON.parse(localStorage.getItem('quiz_scoreboard_players') || '[]');
+    let matchHistory = JSON.parse(localStorage.getItem('quiz_scoreboard_history') || '[]');
+    let autoSort = JSON.parse(localStorage.getItem('quiz_scoreboard_autosort') ?? 'true');
+    let selectedEmoji = '🦁';
+    let selectedColor = '#3b82f6';
+    let uploadedPhotoBase64 = null;
+    let currentHistoryTab = 'weekly';
+
+    // Audio Synthesizer
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTone(freq, type = 'sine', duration = 0.15) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function saveToStorage() {
+      localStorage.setItem('quiz_scoreboard_players', JSON.stringify(players));
+      localStorage.setItem('quiz_scoreboard_history', JSON.stringify(matchHistory));
+      localStorage.setItem('quiz_scoreboard_autosort', JSON.stringify(autoSort));
+    }
+
+    function initSelectors() {
+      const emojiGrid = document.getElementById('emojiGrid');
+      emojiGrid.innerHTML = EMOJIS.map(e =>
+        `<div class="emoji-opt ${e === selectedEmoji ? 'selected' : ''}" onclick="selectEmoji('${e}')">${e}</div>`
+      ).join('');
+
+      const colorRow = document.getElementById('colorRow');
+      colorRow.innerHTML = COLORS.map(c =>
+        `<div class="color-dot ${c === selectedColor ? 'selected' : ''}" style="background:${c}" onclick="selectColor('${c}')"></div>`
+      ).join('');
+    }
+
+    function selectEmoji(e) {
+      selectedEmoji = e;
+      uploadedPhotoBase64 = null;
+      updatePreview();
+      initSelectors();
+    }
+
+    function selectColor(c) {
+      selectedColor = c;
+      updatePreview();
+      initSelectors();
+    }
+
+    function clearUploadedPhoto() {
+      uploadedPhotoBase64 = null;
+      document.getElementById('photoInput').value = '';
+      updatePreview();
+    }
+
+    function updatePreview() {
+      const prev = document.getElementById('avatarPreview');
+      prev.style.borderColor = selectedColor;
+      if (uploadedPhotoBase64) {
+        prev.innerHTML = `<img src="${uploadedPhotoBase64}" alt="avatar" />`;
+      } else {
+        prev.innerHTML = selectedEmoji;
+      }
+    }
+
+    function handlePhotoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const size = 180;
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          const minSide = Math.min(img.width, img.height);
+          const sx = (img.width - minSide) / 2;
+          const sy = (img.height - minSide) / 2;
+          ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+          uploadedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.8);
+          updatePreview();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function openPlayerModal(id = null) {
+      const modal = document.getElementById('playerModal');
+      document.getElementById('editPlayerId').value = id || '';
+      if (id) {
+        const p = players.find(x => x.id === id);
+        document.getElementById('modalTitle').textContent = 'تعديل بيانات المتسابق';
+        document.getElementById('playerNameInput').value = p.name;
+        selectedEmoji = p.emoji || '🦁';
+        selectedColor = p.color || '#3b82f6';
+        uploadedPhotoBase64 = p.photo || null;
+      } else {
+        document.getElementById('modalTitle').textContent = 'إضافة متسابق جديد';
+        document.getElementById('playerNameInput').value = '';
+        selectedEmoji = EMOJIS[players.length % EMOJIS.length];
+        selectedColor = COLORS[players.length % COLORS.length];
+        uploadedPhotoBase64 = null;
+      }
+      initSelectors();
+      updatePreview();
+      modal.classList.add('active');
+      setTimeout(() => document.getElementById('playerNameInput').focus(), 100);
+    }
+
+    function closePlayerModal() {
+      document.getElementById('playerModal').classList.remove('active');
+    }
+
+    function savePlayer() {
+      const name = document.getElementById('playerNameInput').value.trim();
+      if (!name) {
+        alert('الرجاء كتابة اسم المتسابق');
+        return;
+      }
+      const editId = document.getElementById('editPlayerId').value;
+      if (editId) {
+        const p = players.find(x => x.id === editId);
+        if (p) {
+          p.name = name;
+          p.emoji = selectedEmoji;
+          p.color = selectedColor;
+          p.photo = uploadedPhotoBase64;
+        }
+      } else {
+        players.push({
+          id: Date.now().toString(),
+          name,
+          emoji: selectedEmoji,
+          color: selectedColor,
+          photo: uploadedPhotoBase64,
+          score: 0
+        });
+      }
+      saveToStorage();
+      closePlayerModal();
+      renderPlayers();
+    }
+
+    function deletePlayer(id) {
+      if (!confirm('حذف هذا المتسابق؟')) return;
+      players = players.filter(p => p.id !== id);
+      saveToStorage();
+      renderPlayers();
+    }
+
+    function addPoints(id, delta, event) {
+      const p = players.find(x => x.id === id);
+      if (!p) return;
+      p.score += delta;
+      saveToStorage();
+      renderPlayers();
+
+      if (delta > 0) {
+        playTone(620, 'triangle', 0.14);
+      } else {
+        playTone(240, 'sawtooth', 0.16);
+      }
+
+      if (event) {
+        const span = document.createElement('span');
+        span.className = 'float-num';
+        span.textContent = delta > 0 ? `+${delta}` : delta;
+        span.style.color = delta > 0 ? '#34d399' : '#f87171';
+        span.style.left = `${event.clientX - 15}px`;
+        span.style.top = `${event.clientY - 20}px`;
+        document.body.appendChild(span);
+        setTimeout(() => span.remove(), 800);
+      }
+    }
+
+    function openCustomPoints(id) {
+      const p = players.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('customPtPlayerId').value = id;
+      document.getElementById('customPtTitle').textContent = `تعديل نقاط: ${p.name}`;
+      document.getElementById('customPtInput').value = '';
+      document.getElementById('customPointsModal').classList.add('active');
+      setTimeout(() => document.getElementById('customPtInput').focus(), 100);
+    }
+
+    function closeCustomPoints() {
+      document.getElementById('customPointsModal').classList.remove('active');
+    }
+
+    function applyCustomPoints() {
+      const id = document.getElementById('customPtPlayerId').value;
+      const val = parseInt(document.getElementById('customPtInput').value, 10);
+      if (!isNaN(val) && val !== 0) {
+        addPoints(id, val);
+      }
+      closeCustomPoints();
+    }
+
+    function toggleSort() {
+      autoSort = !autoSort;
+      saveToStorage();
+      renderPlayers();
+    }
+
+    function resetAllScores() {
+      if (players.length === 0) return;
+      if (!confirm('هل تريد تصفير نقاط جميع المتسابقين؟')) return;
+      players.forEach(p => p.score = 0);
+      saveToStorage();
+      renderPlayers();
+    }
+
+    function renderPlayers() {
+      document.getElementById('sortState').textContent = autoSort ? 'تلقائي' : 'يدوي';
+      const container = document.getElementById('playersContainer');
+
+      if (players.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div style="font-size:3rem;">🎯</div>
+            <h3>لا يوجد متسابقون حالياً</h3>
+            <p>أضف أسماء وصور المشاركين لبدء احتساب النقاط</p>
+            <button class="btn-icon btn-add" style="margin:0 auto; padding:12px 24px; font-size:1rem;" onclick="openPlayerModal()">
+              ➕ إضافة أول متسابق
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      const sortedByScore = [...players].sort((a, b) => b.score - a.score);
+      const rankMap = {};
+      sortedByScore.forEach((p, idx) => {
+        rankMap[p.id] = p.score > 0 ? idx + 1 : 0;
+      });
+
+      const listToRender = autoSort ? sortedByScore : players;
+
+      container.innerHTML = listToRender.map(p => {
+        const rank = rankMap[p.id];
+        const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+        const rankLabel = rank === 1 ? '👑' : rank > 0 ? rank : '-';
+        const avatarHtml = p.photo
+          ? `<img src="${p.photo}" class="avatar" style="--border-color:${p.color}" alt="${p.name}" />`
+          : `<div class="avatar" style="--border-color:${p.color}">${p.emoji}</div>`;
+
+        return `
+          <div class="player-card ${rankClass}" id="card-${p.id}">
+            <div class="card-top">
+              <div class="player-info">
+                <div class="avatar-wrap">
+                  ${avatarHtml}
+                  <div class="rank-badge">${rankLabel}</div>
+                </div>
+                <div class="name-area">
+                  <div class="player-name">${p.name}</div>
+                  <div class="card-actions-mini">
+                    <button class="mini-btn" onclick="openPlayerModal('${p.id}')">✏️ تعديل</button>
+                    <button class="mini-btn" onclick="deletePlayer('${p.id}')">🗑️ حذف</button>
+                  </div>
+                </div>
+              </div>
+              <div class="score-box">
+                <div class="score-value">${p.score}</div>
+                <div class="score-label">نقطة</div>
+              </div>
+            </div>
+
+            <div class="points-controls">
+              <button class="pt-btn pt-minus" onclick="addPoints('${p.id}', -1, event)">-1</button>
+              <button class="pt-btn pt-plus" onclick="addPoints('${p.id}', 1, event)">+1</button>
+              <button class="pt-btn pt-plus" onclick="addPoints('${p.id}', 2, event)">+2</button>
+              <button class="pt-btn pt-big" onclick="addPoints('${p.id}', 5, event)">+5</button>
+              <button class="pt-btn pt-big" onclick="addPoints('${p.id}', 10, event)">+10</button>
+              <button class="pt-btn pt-custom" onclick="openCustomPoints('${p.id}')">± مخصص</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Save Match to History
+    function openSaveMatchModal() {
+      if (players.length === 0) {
+        alert('أضف متسابقين أولاً لحفظ النتيجة!');
+        return;
+      }
+      document.getElementById('matchTitleInput').value = '';
+      document.getElementById('saveMatchModal').classList.add('active');
+    }
+
+    function closeSaveMatchModal() {
+      document.getElementById('saveMatchModal').classList.remove('active');
+    }
+
+    function confirmSaveMatch() {
+      const titleInput = document.getElementById('matchTitleInput').value.trim();
+      const shouldReset = document.getElementById('resetAfterSaveCheck').checked;
+      const now = new Date();
+      const defaultTitle = `مسابقة ${now.toLocaleDateString('ar-SA')}`;
+
+      const sorted = [...players].sort((a, b) => b.score - a.score);
+      const topScore = sorted[0]?.score || 0;
+
+      const record = {
+        id: Date.now().toString(),
+        title: titleInput || defaultTitle,
+        timestamp: now.toISOString(),
+        results: sorted.map(p => ({
+          playerId: p.id,
+          name: p.name,
+          emoji: p.emoji,
+          color: p.color,
+          photo: p.photo,
+          score: p.score,
+          isWinner: topScore > 0 && p.score === topScore
+        }))
+      };
+
+      matchHistory.unshift(record);
+
+      if (shouldReset) {
+        players.forEach(p => p.score = 0);
+      }
+
+      saveToStorage();
+      renderPlayers();
+      closeSaveMatchModal();
+      playTone(784, 'triangle', 0.25);
+      alert('تم حفظ نتيجة المسابقة في السجل بنجاح! 🎉');
+    }
+
+    // History Filtering & Aggregation (Weekly, Monthly, Yearly, Logs)
+    function openHistoryModal() {
+      document.getElementById('historyModal').classList.add('active');
+      renderHistory();
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('historyModal').classList.remove('active');
+    }
+
+    function switchHistoryTab(tab, btnEl) {
+      currentHistoryTab = tab;
+      document.querySelectorAll('.h-tab').forEach(t => t.classList.remove('active'));
+      btnEl.classList.add('active');
+      renderHistory();
+    }
+
+    function deleteHistoryRecord(id) {
+      if (!confirm('حذف هذا السجل من التاريخ؟')) return;
+      matchHistory = matchHistory.filter(m => m.id !== id);
+      saveToStorage();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const labelEl = document.getElementById('historyPeriodLabel');
+      const contentEl = document.getElementById('historyContent');
+      const now = new Date();
+
+      if (matchHistory.length === 0) {
+        labelEl.textContent = 'لا توجد مسابقات محفوظة بعد';
+        contentEl.innerHTML = `
+          <div style="text-align:center; padding:30px; color:var(--text-muted);">
+            اضغط على زر <strong>"💾 حفظ النتيجة"</strong> أسفل الشاشة بعد انتهاء أي مسابقة لتسجيلها في الإحصائيات الأسبوعية والشهرية والسنوية.
+          </div>
+        `;
+        return;
+      }
+
+      if (currentHistoryTab === 'logs') {
+        labelEl.textContent = `إجمالي المسابقات المحفوظة: ${matchHistory.length}`;
+        contentEl.innerHTML = matchHistory.map(m => {
+          const d = new Date(m.timestamp);
+          const dateStr = d.toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' });
+          const timeStr = d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+          const pills = m.results.map(r =>
+            `<span class="log-pill" style="border-right:3px solid ${r.color}">
+              ${r.isWinner ? '👑 ' : ''}${r.name}: <strong>${r.score}</strong>
+            </span>`
+          ).join('');
+
+          return `
+            <div class="log-card">
+              <div class="log-header">
+                <div>
+                  <strong>${m.title}</strong>
+                  <span style="color:var(--text-muted); font-size:0.75rem; margin-right:6px;">(${dateStr} - ${timeStr})</span>
+                </div>
+                <button class="mini-btn" onclick="deleteHistoryRecord('${m.id}')">🗑️</button>
+              </div>
+              <div class="log-scores">${pills}</div>
+            </div>
+          `;
+        }).join('');
+        return;
+      }
+
+      // Filter matches by period
+      let filtered = [];
+      if (currentHistoryTab === 'weekly') {
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        filtered = matchHistory.filter(m => new Date(m.timestamp) >= sevenDaysAgo);
+        labelEl.textContent = `ترتيب آخر 7 أيام (${filtered.length} مسابقات)`;
+      } else if (currentHistoryTab === 'monthly') {
+        filtered = matchHistory.filter(m => {
+          const d = new Date(m.timestamp);
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        });
+        const monthName = now.toLocaleDateString('ar-SA', { month: 'long', year: 'numeric' });
+        labelEl.textContent = `ترتيب شهر ${monthName} (${filtered.length} مسابقات)`;
+      } else if (currentHistoryTab === 'yearly') {
+        filtered = matchHistory.filter(m => new Date(m.timestamp).getFullYear() === now.getFullYear());
+        labelEl.textContent = `ترتيب عام ${now.getFullYear()} (${filtered.length} مسابقات)`;
+      }
+
+      if (filtered.length === 0) {
+        contentEl.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted);">لا توجد نتائج مسجلة في هذه الفترة.</div>`;
+        return;
+      }
+
+      // Aggregate scores & wins per player name
+      const agg = {};
+      filtered.forEach(m => {
+        m.results.forEach(r => {
+          const key = r.name.trim();
+          if (!agg[key]) {
+            agg[key] = {
+              name: r.name,
+              emoji: r.emoji,
+              color: r.color,
+              photo: r.photo,
+              totalScore: 0,
+              wins: 0,
+              games: 0
+            };
+          }
+          agg[key].totalScore += r.score;
+          if (r.isWinner) agg[key].wins += 1;
+          agg[key].games += 1;
+          if (r.photo) agg[key].photo = r.photo;
+        });
+      });
+
+      const leaderboard = Object.values(agg).sort((a, b) => b.totalScore - a.totalScore);
+
+      contentEl.innerHTML = leaderboard.map((item, idx) => {
+        const rankClass = idx === 0 ? 'top-1' : idx === 1 ? 'top-2' : idx === 2 ? 'top-3' : '';
+        const av = item.photo
+          ? `<img src="${item.photo}" class="h-avatar" style="border-color:${item.color}" />`
+          : `<div class="h-avatar" style="border-color:${item.color}">${item.emoji}</div>`;
+
+        return `
+          <div class="history-item">
+            <div class="h-left">
+              <div class="h-rank ${rankClass}">${idx === 0 ? '👑' : idx + 1}</div>
+              ${av}
+              <div>
+                <div style="font-weight:800; font-size:1.05rem;">${item.name}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">شارك في ${item.games} مسابقات</div>
+              </div>
+            </div>
+            <div class="h-stats">
+              <div class="h-pts">${item.totalScore} نقطة</div>
+              <div class="h-wins">🏆 ${item.wins} فوز</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Random Picker
+    function pickRandomPlayer() {
+      if (players.length < 2) {
+        alert('أضف متسابقين اثنين على الأقل لإجراء القرعة!');
+        return;
+      }
+      let steps = 15;
+      let current = 0;
+      const interval = setInterval(() => {
+        document.querySelectorAll('.player-card').forEach(c => c.classList.remove('highlighted'));
+        const randPlayer = players[Math.floor(Math.random() * players.length)];
+        const card = document.getElementById(`card-${randPlayer.id}`);
+        if (card) card.classList.add('highlighted');
+        playTone(400 + current * 25, 'sine', 0.06);
+        current++;
+        if (current >= steps) {
+          clearInterval(interval);
+          playTone(880, 'triangle', 0.3);
+        }
+      }, 90);
+    }
+
+    // Countdown Timer
+    let defaultSeconds = 30;
+    let remainingSeconds = 30;
+    let timerInterval = null;
+
+    function updateTimerUI() {
+      const mins = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
+      const secs = String(remainingSeconds % 60).padStart(2, '0');
+      const disp = document.getElementById('timerDisplay');
+      disp.textContent = `${mins}:${secs}`;
+      if (remainingSeconds <= 5 && remainingSeconds > 0) {
+        disp.classList.add('warning');
+      } else {
+        disp.classList.remove('warning');
+      }
+    }
+
+    function toggleTimer() {
+      const btn = document.getElementById('timerStartBtn');
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        btn.textContent = '▶️';
+        btn.className = 't-btn play';
+      } else {
+        if (remainingSeconds <= 0) remainingSeconds = defaultSeconds;
+        btn.textContent = '⏸️';
+        btn.className = 't-btn pause';
+        timerInterval = setInterval(() => {
+          remainingSeconds--;
+          updateTimerUI();
+          if (remainingSeconds <= 5 && remainingSeconds > 0) {
+            playTone(500, 'sine', 0.1);
+          }
+          if (remainingSeconds <= 0) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            btn.textContent = '▶️';
+            btn.className = 't-btn play';
+            playTone(220, 'sawtooth', 0.6);
+          }
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      remainingSeconds = defaultSeconds;
+      const btn = document.getElementById('timerStartBtn');
+      btn.textContent = '▶️';
+      btn.className = 't-btn play';
+      updateTimerUI();
+    }
+
+    function setPresetTimer(sec) {
+      defaultSeconds = sec;
+      resetTimer();
+    }
+
+    function editTimer() {
+      const val = prompt('أدخل مدة المؤقت بالثواني:', defaultSeconds);
+      const parsed = parseInt(val, 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        defaultSeconds = parsed;
+        resetTimer();
+      }
+    }
+
+    // Podium
+    function showPodium() {
+      if (players.length === 0) {
+        alert('لا يوجد متسابقون لعرض النتائج!');
+        return;
+      }
+      const sorted = [...players].sort((a, b) => b.score - a.score);
+      const top3 = [sorted[1], sorted[0], sorted[2]];
+      const classes = ['bar-2', 'bar-1', 'bar-3'];
+      const medals = ['🥈 2', '🥇 1', '🥉 3'];
+
+      const html = top3.map((p, i) => {
+        if (!p) return '<div class="podium-col"></div>';
+        const av = p.photo
+          ? `<img src="${p.photo}" class="podium-avatar" style="border-color:${p.color}" />`
+          : `<div class="podium-avatar" style="border-color:${p.color}">${p.emoji}</div>`;
+        return `
+          <div class="podium-col">
+            ${av}
+            <div class="podium-name">${p.name}</div>
+            <div class="podium-bar ${classes[i]}">
+              <div>${medals[i]}</div>
+              <div style="font-size:1.1rem; margin-top:4px;">${p.score}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('podiumContent').innerHTML = html;
+      document.getElementById('podiumModal').classList.add('active');
+      playTone(523, 'triangle', 0.15);
+      setTimeout(() => playTone(659, 'triangle', 0.15), 150);
+      setTimeout(() => playTone(784, 'triangle', 0.3), 300);
+    }
+
+    function closePodium() {
+      document.getElementById('podiumModal').classList.remove('active');
+    }
+
+    // Initialize App
+    renderPlayers();
+    updateTimerUI();
+  </script>
+</body>
+</html>
